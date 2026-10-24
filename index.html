@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MediBot Specimen Runner: 3D twin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{--bg:#e9eef1;--surface:#fff;--ink:#15222a;--muted:#566872;--line:#cfd9df;--accent:#0b7480;--main:#3b78b8;--nav:#1f7a5c;--decide:#b5860a;--err:#b83a46;--main-soft:#eaf2fb;--nav-soft:#e6f4ed;--decide-soft:#fdf2d6;--err-soft:#fbe9ea;--frame:#f4f7f9;--font-body:"Atkinson Hyperlegible",system-ui,sans-serif;--font-mono:"JetBrains Mono",ui-monospace,monospace;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1418;--surface:#162027;--ink:#e3ebee;--muted:#93a6af;--line:#2a3842;--accent:#3cb4bf;--main:#6aa6e0;--nav:#4fc29b;--decide:#e1b13a;--err:#ee7a85;--main-soft:#1b2842;--nav-soft:#163023;--decide-soft:#382d12;--err-soft:#3b1d1c;--frame:#121b21}}
+:root[data-theme="dark"]{--bg:#0e1418;--surface:#162027;--ink:#e3ebee;--muted:#93a6af;--line:#2a3842;--accent:#3cb4bf;--main:#6aa6e0;--nav:#4fc29b;--decide:#e1b13a;--err:#ee7a85;--main-soft:#1b2842;--nav-soft:#163023;--decide-soft:#382d12;--err-soft:#3b1d1c;--frame:#121b21}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--font-body);padding:14px max(16px,env(safe-area-inset-right,0px)) 32px max(16px,env(safe-area-inset-left,0px))}
+.wrap{max-width:1640px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;justify-content:space-between}
+h1{font-size:1.4rem;margin:0;letter-spacing:-.01em}h1 small{display:block;font-size:.8rem;font-weight:400;color:var(--muted)}
+.row{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+button,select{font:inherit;font-size:.86rem;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:6px 11px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}button:disabled{opacity:.45;cursor:default}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.danger{border-color:var(--err);color:var(--err);font-weight:700}button.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+label.inline{display:inline-flex;align-items:center;gap:6px;font-size:.85rem;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;min-width:0}
+.eyebrow{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0}
+.main{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:12px}
+@media(max-width:1100px){.main{grid-template-columns:minmax(0,1fr)}}
+#view{position:relative;height:clamp(340px,58vh,620px);border-radius:6px;overflow:hidden;background:#dfe7eb}
+@media(max-width:700px){#view{height:80vw;min-height:270px}}
+#view canvas{display:block;width:100%;height:100%;touch-action:none}
+#err3d{display:none;padding:20px;color:#15222a}
+.hint{position:absolute;left:10px;bottom:10px;font-size:.78rem;color:#2a3a43;background:rgba(255,255,255,.85);border-radius:5px;padding:5px 9px;pointer-events:none}
+.camrow{position:absolute;top:10px;right:10px;display:flex;gap:6px}.camrow button{background:rgba(255,255,255,.9);color:#15222a;border-color:#c5d0d6;font-size:.78rem;padding:4px 9px}.camrow button.on{background:#15222a;color:#fff}
+.batt{position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:7px;font:.74rem var(--font-mono);color:#15222a;background:rgba(255,255,255,.9);border-radius:5px;padding:4px 8px}
+.batt .bar{width:64px;height:7px;border-radius:4px;background:#c9d3d8;overflow:hidden}.batt .fill{display:block;height:100%;background:#258a4f}
+.mind{display:flex;align-items:center;gap:10px;height:3.6rem;margin-bottom:8px;padding:6px 10px;border:2px solid #0b7480;border-radius:10px;background:#f4fbfc;color:#15222a;transition:border-color .2s,background .2s}
+.mind.alert{border-color:#b83a46;background:#fdf3f2}.mind.happy{border-color:#258a4f;background:#f1faf4}
+.mind svg{flex:0 0 auto;width:40px;height:40px}.mind .txt{flex:1;font-weight:700;font-size:.92rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.controlsrow{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.now{display:flex;flex-direction:column;justify-content:center;gap:2px;height:4.9rem;overflow:hidden;border:1px solid var(--line);border-left:5px solid var(--main);border-radius:6px;padding:6px 12px;margin-bottom:10px;background:var(--frame)}
+.now .name{font-size:1.1rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.now .detail{color:var(--muted);font-size:.88rem;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+svg.diagram{display:block;width:100%;height:auto;font-family:var(--font-body)}
+svg .frame{fill:var(--frame);stroke:var(--line);stroke-dasharray:5 4}svg .frame.err{fill:var(--err-soft);stroke:var(--err);opacity:.7}svg .frame.nv{fill:var(--nav-soft);stroke:var(--nav)}
+svg .ft{font:600 14px var(--font-mono);fill:var(--muted)}svg .note{font-size:12.5px;fill:var(--muted)}
+svg .node rect,svg .node polygon{stroke-width:1.6;transition:fill .15s}
+svg .node text{font-size:15px;fill:var(--ink);text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+svg .g-main rect{fill:var(--main-soft);stroke:var(--main)}svg .g-nav rect{fill:var(--nav-soft);stroke:var(--nav)}svg .g-del rect{fill:var(--decide-soft);stroke:var(--decide)}svg .g-err rect{fill:var(--err-soft);stroke:var(--err)}svg .g-q polygon{fill:var(--decide-soft);stroke:var(--decide)}
+svg .node.active rect,svg .node.active polygon{stroke-width:4}
+svg .g-main.active rect{fill:var(--main)}svg .g-nav.active rect{fill:var(--nav)}svg .g-del.active rect{fill:var(--decide)}svg .g-err.active rect{fill:var(--err)}svg .g-q.active polygon{fill:var(--decide)}
+svg .node.active text{fill:var(--surface);font-weight:700}
+svg .edge path{fill:none;stroke:var(--muted);stroke-width:1.4;opacity:.7}svg .edge.dash path{stroke-dasharray:6 4}svg .edge text{font-size:12.5px;fill:var(--muted)}
+svg .edge.taken path{stroke:var(--accent);stroke-width:3.4;opacity:1}svg .edge.taken text{fill:var(--accent);font-weight:700}
+.log{font:.76rem var(--font-mono);max-height:520px;overflow:auto;color:var(--muted)}.log div{padding:3px 0;border-bottom:1px solid var(--line)}.log b{color:var(--ink);font-weight:600}
+.stats{display:flex;gap:18px;flex-wrap:wrap;color:var(--muted);font-size:.86rem;margin:6px 0}.stats b{color:var(--ink);font:600 1.05rem var(--font-mono)}
+.under{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}@media(max-width:1100px){.under{grid-template-columns:minmax(0,1fr)}}
+.note2{font-size:.84rem;color:var(--muted);margin:6px 0 8px;max-width:64ch}.memstats{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;font-size:.86rem;color:var(--muted)}.memstats b{color:var(--ink);font:600 1.05rem var(--font-mono)}
+.learn{width:100%;border-collapse:collapse;font-size:.84rem;font-variant-numeric:tabular-nums;margin-top:8px}.learn th{font:600 .62rem var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:5px 6px;border-bottom:1px solid var(--line)}.learn td{padding:6px;border-bottom:1px solid var(--line)}.learn .num{text-align:right}.learn th.num{text-align:right}.learn td i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}.learn .unknown{color:var(--muted);font-style:italic}.learn .best{color:var(--nav);font-weight:700}
+</style></head><body>
+<div class="wrap">
+<header><h1>MediBot Specimen Runner · 3D twin <small>Revised state flow diagram, running live</small></h1>
+<div class="row"><button id="btnPlay">Pause</button><label class="inline">Speed <select id="speed"><option value="0.5">Slow</option><option value="1" selected>Normal</option><option value="2.5">Fast</option><option value="6">Turbo</option></select></label></div></header>
+<div class="main">
+<section class="card">
+<div class="mind" id="mind"><svg viewBox="0 0 40 40" aria-hidden="true"><line x1="20" y1="3" x2="20" y2="9" stroke="#15222a" stroke-width="2"/><circle cx="20" cy="3.5" r="2.5" fill="#0b7480"/><rect x="6" y="9" width="28" height="22" rx="6" fill="#e9eef1" stroke="#15222a" stroke-width="2"/><rect x="10" y="13" width="20" height="11" rx="4" fill="#15222a"/><circle cx="15.5" cy="18.5" r="2.4" fill="#5fe0ea"/><circle cx="24.5" cy="18.5" r="2.4" fill="#5fe0ea"/><rect x="14" y="27" width="12" height="2" rx="1" fill="#15222a"/><rect x="11" y="32" width="18" height="5" rx="2" fill="#0b7480"/></svg><div class="txt" id="mindTxt" aria-live="polite"></div></div>
+<div id="view"><div id="err3d">The 3D view could not start (WebGL is unavailable). The diagram and log still run.</div>
+<div class="batt"><span>Battery</span><span class="bar"><span class="fill" id="batFill"></span></span><span id="batTxt">100%</span></div>
+<div class="camrow"><button id="camOver" class="on">Overview</button><button id="camFollow">Follow robot</button><button id="fogBtn" class="on">Fog of war</button></div>
+<div class="hint">Drag to rotate, pinch or scroll to zoom. Pickup wards are color coded: Ward 1 blue, Ward 2 amber, Ward 3 coral. Purple people are visitors; teal people are staff. Dark areas are not on the robot’s map yet.</div></div>
+<div class="controlsrow"><div class="row"><span class="eyebrow">Request pickup from</span><button class="wb" data-w="1"><i style="display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;background:#3b78b8"></i>Ward 1</button><button class="wb" data-w="2"><i style="display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;background:#d9a514"></i>Ward 2</button><button class="wb" data-w="3"><i style="display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;background:#d9603b"></i>Ward 3</button><label class="inline"><input type="checkbox" id="auto" checked> Automatic requests and staff response</label></div>
+<div class="stats"><span>Runs completed <b id="nRuns">0</b></span><span>Reroutes <b id="nRer">0</b></span><span>Waits <b id="nWait">0</b></span><span>Recoveries <b id="nRec">0</b></span></div></div>
+</section>
+<section class="card">
+<div class="now" id="now"><span class="name" id="nowName"></span><span class="detail" id="nowDetail"></span></div>
+<svg class="diagram" id="diagram" viewBox="0 0 1010 640" role="img" aria-label="MediBot state flow diagram with the current state highlighted"></svg>
+<div class="row" style="margin-top:10px"><span class="eyebrow">Interrupts and checks</span>
+<button id="bEst" class="danger">Emergency stop</button><button id="bClr">Clear and reset</button><button id="bFault">Sensor fault</button><button id="bLow">Low battery</button><button id="bTo">Job timeout</button><button id="bRes">Resolve issue</button><button id="bHold">Hold checks: off</button></div>
+</section></div>
+<div class="under"><section class="card"><p class="eyebrow">What the robot has learned</p>
+<p class="note2">It starts knowing only the base. Each ward, the lab and the storage room must be found by exploring. Everything it sees goes onto its own map (the dark areas in the 3D view are still unknown), and later trips use that map to take the shortest known route. Trip columns count steps for the leg that ends at that place: base to ward, ward to lab, lab to base.</p>
+<div class="memstats"><span>Map explored <b id="explored">0%</b></span><span>Rooms found <b id="rooms">0</b></span><span>Last run vs shortest <b id="lastRun">-</b></span><button id="bForget">Forget map (start over)</button></div>
+<table class="learn"><thead><tr><th>Department</th><th class="num">Found on run</th><th class="num">First trip</th><th class="num">Best</th><th class="num">Last trip</th><th class="num">Over optimal</th></tr></thead><tbody id="learnRows"></tbody></table>
+<p class="eyebrow" style="margin-top:14px">Steps per run vs shortest possible</p><svg id="chart" viewBox="0 0 640 175" style="width:100%;height:auto" role="img" aria-label="Steps per run compared with the shortest possible route"></svg></section>
+<section class="card"><p class="eyebrow">Decision log</p><div class="log" id="log" aria-live="polite"></div></section></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(()=>{"use strict";
+const $=i=>document.getElementById(i);
+// ---------- state model (matches the revised diagram)
+const ST={INIT:["Initialize","Check system, sensors, battery and compartment.","main"],STANDBY:["Standby","At the designated base. Ready to accept a request.","main"],VALIDATE:["Validate request","Check pickup location, delivery location and job data. Hold for correction if invalid.","main"],NAV_PICKUP:["Navigate to pickup","Target: requesting unit. Runs the shared OODA routine.","nav"],RECEIVE:["Receive and secure","Verify ID and delivery details; load and lock compartment. Hold if verification fails.","main"],NAV_DELIVERY:["Navigate to delivery","Target: receiving location. Runs the shared OODA routine.","nav"],VERIFY:["Verify handoff","Authorize receiving staff; release specimen; verify receipt. Pending: wait / bounded retry.","main"],RECORD:["Record and notify","Log verified receipt; send delivery confirmation. Retry notification if needed.","main"],NAV_STANDBY:["Navigate to standby","Target: designated base. Runs the shared OODA routine.","nav"],ESTOP:["Emergency stop","Stop motion immediately; inhibit movement and alert staff. Await authorized clearance and reset.","err"],RECOVERY:["Recovery / assistance hold","Stop safely; secure any specimen; retain trip and task progress. Remain on hold until resolved.","err"],REVALIDATE:["Revalidate","Check sensors, battery, location, load status and saved trip. Resume only after checks pass.","main"]};
+const ACTIVE=["STANDBY","VALIDATE","NAV_PICKUP","RECEIVE","NAV_DELIVERY","VERIFY","RECORD","NAV_STANDBY"];
+// ---------- diagram
+const N=[["INIT",16,80,108,56,["Initialize"],"main"],["STANDBY",146,80,108,56,["Standby"],"main"],["VALIDATE",276,80,108,56,["Validate","request"],"main"],["NAV_PICKUP",406,80,108,56,["Navigate","to pickup"],"nav"],["RECEIVE",536,80,108,56,["Receive and","secure"],"main"],
+["NAV_DELIVERY",536,200,108,56,["Navigate","to delivery"],"nav"],["VERIFY",406,200,108,56,["Verify","handoff"],"main"],["RECORD",276,200,108,56,["Record and","notify"],"main"],["NAV_STANDBY",146,200,108,56,["Navigate","to standby"],"nav"],
+["ESTOP",764,90,210,58,["Emergency stop"],"err"],["RECOVERY",764,250,210,66,["Recovery /","assistance hold"],"err"],["REVALIDATE",764,430,210,58,["Revalidate"],"main"],
+["observe",40,420,100,52,["Observe"],"nav"],["orient",170,420,100,52,["Orient"],"nav"],["act_move",520,360,160,52,["Act: move","/ reroute"],"nav"],["act_wait",520,508,160,52,["Act: stop","and wait"],"del"]];
+const E=[["INIT","STANDBY",[[124,108],[146,108]],"Ready at base",138,68,"middle"],["STANDBY","VALIDATE",[[254,108],[276,108]],"New request",268,68,"middle"],["VALIDATE","NAV_PICKUP",[[384,108],[406,108]],"Valid",398,68,"middle"],["NAV_PICKUP","RECEIVE",[[514,108],[536,108]],"Pickup reached",528,68,"middle"],
+["RECEIVE","NAV_DELIVERY",[[590,136],[590,200]],"Secured; job verified",582,172,"end"],["NAV_DELIVERY","VERIFY",[[536,228],[514,228]],"Delivery reached",528,192,"middle"],["VERIFY","RECORD",[[406,228],[384,228]],"Receipt verified",398,192,"middle"],["RECORD","NAV_STANDBY",[[276,228],[254,228]],"Sender notified",268,192,"middle"],
+["NAV_STANDBY","STANDBY",[[200,200],[200,136]],"Base reached",208,168,"start"],["INIT","NAV_STANDBY",[[70,136],[70,228],[146,228]],"Ready; away",78,172,"start"],
+["*","ESTOP",[[722,119],[764,119]],"Emergency stop",716,104,"end","d"],["ESTOP","RECOVERY",[[869,148],[869,250]],"clearance + reset",877,205,"start"],["*","RECOVERY",[[722,283],[764,283]],"Fault / low battery /",716,262,"end","d"],
+["RECOVERY","REVALIDATE",[[869,316],[869,430]],"issue resolved",877,378,"start"],["REVALIDATE","RECOVERY",[[974,459],[990,459],[990,283],[974,283]],"checks fail",1000,371,"middle","r"],["REVALIDATE","*",[[764,459],[722,459]],"Checks pass: resume",716,440,"end","g"],
+["observe","orient",[[140,446],[170,446]]],["orient","decide",[[270,446],[310,446]]],["decide","act_move",[[430,446],[480,446],[480,386],[520,386]],"safe path",474,418,"end"],["decide","act_wait",[[370,486],[370,534],[520,534]],"no safe path",380,526,"start"],
+["act_move","observe",[[600,360],[600,340],[90,340],[90,420]],"repeat after movement",350,334,"middle"],["act_wait","observe",[[600,560],[600,590],[90,590],[90,472]],"repeat while waiting",350,584,"middle"]];
+function build(){let s='<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker><marker id="aht" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker></defs>';
+s+='<rect class="frame" x="8" y="10" width="718" height="612" rx="12"/><text class="ft" x="24" y="34">Operational</text><rect class="frame err" x="744" y="10" width="260" height="612" rx="12"/><text class="ft" x="760" y="34" style="fill:var(--err)">Global interrupts</text><rect class="frame nv" x="20" y="300" width="680" height="312" rx="10"/><text class="ft" x="36" y="322" style="fill:var(--nav)">Shared navigation routine: OODA</text>';
+s+='<text class="note" x="104" y="505">Orient uses the learned map.</text><text class="note" x="104" y="522">Target not on the map yet:</text><text class="note" x="104" y="539">Decide explores unknown space.</text><text class="note" x="760" y="560">Specimen stays secured while</text><text class="note" x="760" y="577">on hold. Emergency overrides</text><text class="note" x="760" y="594">recovery too.</text><text class="note" x="24" y="614">Recovery keeps trip, target and delivery status; navigation restarts at Observe.</text>';
+E.forEach((e,i)=>{const d="M"+e[2].map(p=>p.join(" ")).join("L");s+=`<g class="edge ${e[7]==="d"?"dash":""}" id="e${i}"><path d="${d}" marker-end="url(#ah)"/>`;if(e[3])s+=`<text x="${e[4]}" y="${e[5]}" text-anchor="${e[6]}"${e[7]==="r"?` transform="rotate(-90 ${e[4]} ${e[5]})"`:""}>${e[3]}</text>`;s+="</g>"});
+s+='<text class="note" x="716" y="275" text-anchor="end">job timeout</text><text class="note" x="716" y="453" text-anchor="end">saved trip</text>';
+for(const n of N){const [id,x,y,w,h,l,g]=n;s+=`<g class="node g-${g}" id="n_${id}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10"/>`+l.map((t,i)=>`<text x="${x+w/2}" y="${y+h/2+(i-(l.length-1)/2)*18}">${t}</text>`).join("")+"</g>"}
+s+='<g class="node g-q" id="n_decide"><polygon points="370,406 430,446 370,486 310,446"/><text x="370" y="446">Decide</text></g>';
+$("diagram").innerHTML=s}
+build();
+const eFlash={};const eIdx=(f,t)=>{let i=E.findIndex(e=>e[0]===f&&e[1]===t);return i<0?E.findIndex(e=>e[0]==="*"&&e[1]===t):i};
+function take(f,t,ms){const i=eIdx(f,t);if(i>=0)eFlash[i]=performance.now()+(ms||1800)}
+// ---------- world
+const COLS=28,ROWS=17,grid=Array.from({length:ROWS},()=>Array(COLS).fill(1));
+const carve=(a,b,c,d)=>{for(let y=b;y<=d;y++)for(let x=a;x<=c;x++)grid[y][x]=0};
+carve(1,1,7,4);carve(9,1,15,4);carve(17,1,26,4);carve(1,6,26,7);carve(1,9,7,13);carve(9,9,14,13);carve(3,5,4,5);carve(11,5,12,5);carve(21,5,22,5);carve(3,8,4,8);carve(11,8,12,8);carve(16,9,22,13);carve(18,8,19,8);const FREE=grid.flat().filter(v=>!v).length;
+const W=(x,y)=>[x-COLS/2+.5,y-ROWS/2+.5];
+const WARDS={1:{name:"Ward 1",hex:0x3b78b8,css:"#3b78b8",pad:[11,11],table:[11,10]},2:{name:"Ward 2",hex:0xd9a514,css:"#d9a514",pad:[12,3],table:[12,2]},3:{name:"Ward 3",hex:0xd9603b,css:"#d9603b",pad:[4,3],table:[4,2]}};
+const TGT={NAV_DELIVERY:[22,3],NAV_STANDBY:[3,11]};
+const DEPTS=[["w1","Ward 1","#3b78b8",[11,11]],["w2","Ward 2","#d9a514",[12,3]],["w3","Ward 3","#d9603b",[4,3]],["lab","Lab","#1f9a5a",[22,3]],["base","Base (return)","#0b7480",[3,11]],["store","Storage","#7a8b94",[19,11]]];
+let known=new Set(),syncFog=()=>{},hideFog=()=>{};const FOUND={},LS={},staffM=[];
+function astar(s,t,blk,gt){const k=(x,y)=>y*COLS+x,g={[k(s[0],s[1])]:0},par={},open=[[0,s[0],s[1]]],done=new Set(),sk=k(s[0],s[1]);
+while(open.length){open.sort((a,b)=>a[0]-b[0]);const[,x,y]=open.shift(),kk=k(x,y);if(done.has(kk))continue;done.add(kk);
+if(x===t[0]&&y===t[1]){const p=[];let c=kk;while(c!==sk){p.unshift([c%COLS,(c/COLS)|0]);c=par[c]}return p}
+for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=COLS||ny>=ROWS||grid[ny][nx])continue;const nk=k(nx,ny);if(!gt&&!known.has(nk))continue;if(blk.has(nk)&&!(nx===t[0]&&ny===t[1]))continue;const ng=g[kk]+1;if(g[nk]===undefined||ng<g[nk]){g[nk]=ng;par[nk]=kk;open.push([ng+Math.abs(nx-t[0])+Math.abs(ny-t[1]),nx,ny])}}}return null}
+const isFront=(x,y)=>{if(grid[y][x]||!known.has(y*COLS+x))return false;return[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>{const nx=x+dx,ny=y+dy;return nx>=0&&ny>=0&&nx<COLS&&ny<ROWS&&!known.has(ny*COLS+nx)})};
+function explore(s,blk){const k=(x,y)=>y*COLS+x,par={},q=[s],seen=new Set([k(s[0],s[1])]);
+while(q.length){const[x,y]=q.shift();if(isFront(x,y)&&!(x===s[0]&&y===s[1])){const p=[];let c=k(x,y);while(c!==k(s[0],s[1])){p.unshift([c%COLS,(c/COLS)|0]);c=par[c]}return p}
+for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=COLS||ny>=ROWS||grid[ny][nx])continue;const nk=k(nx,ny);if(seen.has(nk)||!known.has(nk)||blk.has(nk))continue;seen.add(nk);par[nk]=k(x,y);q.push([nx,ny])}}return null}
+function los(c,x,y){let x0=c[0],y0=c[1];const dx=Math.abs(x-x0),dy=Math.abs(y-y0),sx=x0<x?1:-1,sy=y0<y?1:-1;let err=dx-dy;while(true){if(x0===x&&y0===y)return true;if(!(x0===c[0]&&y0===c[1])&&grid[y0][x0])return false;const e2=2*err;if(e2>-dy){err-=dy;x0+=sx}if(e2<dx){err+=dx;y0+=sy}}}
+function reveal(c){let ch=false;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const x=c[0]+dx,y=c[1]+dy;if(x<0||y<0||x>=COLS||y>=ROWS||dx*dx+dy*dy>7)continue;const key=y*COLS+x;if(known.has(key))continue;if(los(c,x,y)){known.add(key);if(!grid[y][x])S.kfree++;ch=true;hideFog(key)}}if(ch){S.dirty=true;checkFound()}}
+function checkFound(){for(const d of DEPTS){if(FOUND[d[0]]===undefined&&known.has(d[3][1]*COLS+d[3][0])){FOUND[d[0]]=d[0]==="base"?0:S.runs+1;if(d[0]==="store")log("Found the Storage room: nothing to pick up or deliver here.");else if(d[0]!=="base")log("Learned where "+d[1]+" is and added it to my map.")}}}
+const people=[[8,6,1],[20,7,-1]].map(([x,y,d])=>({x,y,d}));
+// ---------- 3D
+let ok=true,ren,scene,cam,ctl,bot,spec,ring,tip,glassM,perMesh=[],T=THREE,following=false;
+try{
+ren=new T.WebGLRenderer({antialias:true});ren.shadowMap.enabled=true;$("view").prepend(ren.domElement);
+scene=new T.Scene();scene.background=new T.Color(0xdfe7eb);cam=new T.PerspectiveCamera(42,1,.1,300);
+ctl=new T.OrbitControls(cam,ren.domElement);ctl.enableDamping=true;ctl.maxPolarAngle=Math.PI*.46;ctl.minDistance=5;ctl.maxDistance=55;
+scene.add(new T.HemisphereLight(0xffffff,0x94a3ad,.85));const sun=new T.DirectionalLight(0xffffff,.65);sun.position.set(10,26,9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-17,right:17,top:12,bottom:-12,near:1,far:70});scene.add(sun);
+const std=(c,x)=>new T.MeshStandardMaterial(Object.assign({color:c,roughness:.8},x||{}));
+const plane=(x0,y0,x1,y1,c,y)=>{const m=new T.Mesh(new T.PlaneGeometry(x1-x0+1,y1-y0+1),std(c));m.rotation.x=-Math.PI/2;const[wx,wz]=W((x0+x1)/2,(y0+y1)/2);m.position.set(wx,y||.004,wz);m.receiveShadow=true;scene.add(m)};
+plane(0,0,COLS-1,ROWS-1,0xf5f7f8,0);plane(1,6,26,7,0xd8e2e8);plane(1,1,7,4,0xf8e1d8);plane(17,1,26,4,0xdff1e6);plane(9,1,15,4,0xfaefc9);plane(1,9,7,13,0xd9eef0);plane(9,9,14,13,0xdcebf7);plane(16,9,22,13,0xece8df);
+[[3,5,4,5],[11,5,12,5],[21,5,22,5],[3,8,4,8],[11,8,12,8],[18,8,19,8]].forEach(a=>plane(...a,0xd8e2e8));
+const label=(t,x,y)=>{const c=document.createElement("canvas");c.width=512;c.height=64;const g=c.getContext("2d");g.fillStyle="#5b6d77";g.font="600 34px JetBrains Mono, monospace";g.textBaseline="middle";g.fillText(t,6,34);const m=new T.Mesh(new T.PlaneGeometry(5,.625),new T.MeshBasicMaterial({map:new T.CanvasTexture(c),transparent:true}));m.rotation.x=-Math.PI/2;m.position.set(x-COLS/2+2.5,.01,y-ROWS/2+.3);scene.add(m)};
+label("WARD 3 (PICKUP)",1.2,1.1);label("WARD 2 (PICKUP)",9.2,1.1);label("LAB (DELIVERY)",17.2,1.1);label("BASE / STANDBY",1.2,9.1);label("WARD 1 (PICKUP)",9.2,9.1);label("STORAGE (NO PICKUP)",16.2,9.1);label("MAIN CORRIDOR",9.2,5.9);
+const cells=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(grid[y][x])cells.push([x,y]);
+const wm=new T.InstancedMesh(new T.BoxGeometry(1,.6,1),std(0x51636d),cells.length);const mx=new T.Matrix4();cells.forEach(([x,y],i)=>{const[wx,wz]=W(x,y);mx.makeTranslation(wx,.3,wz);wm.setMatrixAt(i,mx)});wm.castShadow=wm.receiveShadow=true;wm.frustumCulled=false;scene.add(wm);
+const pad=(c,h)=>{const m=new T.Mesh(new T.RingGeometry(.32,.46,4,1,Math.PI/4),new T.MeshBasicMaterial({color:h}));m.rotation.x=-Math.PI/2;const[wx,wz]=W(...c);m.position.set(wx,.012,wz);scene.add(m)};
+Object.values(WARDS).forEach(w=>pad(w.pad,w.hex));pad(TGT.NAV_DELIVERY,0x1f9a5a);pad(TGT.NAV_STANDBY,0x0b7480);
+const table=c=>{const m=new T.Mesh(new T.BoxGeometry(.8,.4,.5),std(0x8a99a2));const[wx,wz]=W(...c);m.position.set(wx,.2,wz);m.castShadow=true;scene.add(m)};Object.values(WARDS).forEach(w=>table(w.table));table([22,2]);[[17,12],[18,12],[21,12],[21,10]].forEach(c=>{const m=new T.Mesh(new T.BoxGeometry(.8,.5,.7),std(0xb69a74));const[wx,wz]=W(...c);m.position.set(wx,.25,wz);m.castShadow=true;scene.add(m)});
+const ch=new T.Mesh(new T.BoxGeometry(.5,.6,.18),std(0x258a4f,{emissive:0x0d3a20}));{const[wx,wz]=W(3,12);ch.position.set(wx,.3,wz+.4);scene.add(ch)}
+const person=(c)=>{const g=new T.Group();const t=new T.Mesh(new T.CylinderGeometry(.17,.21,.8,12),std(c));t.position.y=.45;t.castShadow=true;const h=new T.Mesh(new T.SphereGeometry(.14,14,10),std(0xdcb08a));h.position.y=.98;g.add(t,h);scene.add(g);return g};
+perMesh=people.map(()=>person(0x8a6fb0));[[5,3],[13,3],[12,11],[23,3]].forEach(c=>{const p=person(0x1f9a8a);const[wx,wz]=W(...c);p.position.set(wx,0,wz);staffM.push([c,p])});
+const fog=new T.InstancedMesh(new T.PlaneGeometry(1,1),new T.MeshBasicMaterial({color:0x22313b,transparent:true,opacity:.9,depthWrite:false}),COLS*ROWS);fog.frustumCulled=false;fog.renderOrder=5;scene.add(fog);
+const fq=new T.Quaternion().setFromEuler(new T.Euler(-Math.PI/2,0,0)),fm=new T.Matrix4();
+const setFog=(i,on)=>{const[wx,wz]=W(i%COLS,(i/COLS)|0);fm.compose(new T.Vector3(wx,.72,wz),fq,new T.Vector3(on?1:0,on?1:0,1));fog.setMatrixAt(i,fm)};
+hideFog=i=>{setFog(i,false);fog.instanceMatrix.needsUpdate=true};
+syncFog=()=>{for(let i=0;i<COLS*ROWS;i++)setFog(i,!known.has(i));fog.instanceMatrix.needsUpdate=true};
+$("fogBtn").onclick=()=>{fog.visible=!fog.visible;$("fogBtn").className=fog.visible?"on":""};
+bot=new T.Group();scene.add(bot);
+const body=new T.Mesh(new T.BoxGeometry(.62,.46,.5),std(0xeef3f6,{roughness:.5}));body.position.y=.34;body.castShadow=true;bot.add(body);
+const face=new T.Mesh(new T.BoxGeometry(.04,.22,.4),std(0x15222a));face.position.set(.32,.4,0);bot.add(face);
+[-.1,.1].forEach(z=>{const e=new T.Mesh(new T.SphereGeometry(.035,8,8),new T.MeshBasicMaterial({color:0x5fe0ea}));e.position.set(.345,.42,z);bot.add(e)});
+glassM=new T.Mesh(new T.BoxGeometry(.46,.26,.4),new T.MeshStandardMaterial({color:0xaee3ff,transparent:true,opacity:.4,roughness:.2}));glassM.position.y=.69;bot.add(glassM);
+const ant=new T.Mesh(new T.CylinderGeometry(.012,.012,.25,6),std(0x15222a));ant.position.set(-.2,.95,0);bot.add(ant);
+tip=new T.Mesh(new T.SphereGeometry(.05,10,8),new T.MeshBasicMaterial({color:0x0b7480}));tip.position.set(-.2,1.1,0);bot.add(tip);
+ring=new T.Mesh(new T.TorusGeometry(.42,.03,8,32),new T.MeshBasicMaterial({color:0x3b78b8}));ring.rotation.x=Math.PI/2;ring.position.y=.03;bot.add(ring);
+spec=new T.Mesh(new T.BoxGeometry(.24,.2,.24),std(0x19c3d6,{roughness:.5}));spec.castShadow=true;spec.visible=false;scene.add(spec);
+function fit(){const r=$("view").getBoundingClientRect();ren.setPixelRatio(Math.min(2,devicePixelRatio));ren.setSize(r.width,r.height,false);cam.aspect=r.width/r.height;cam.updateProjectionMatrix()}
+function overview(){const vf=cam.fov*Math.PI/360,hf=Math.atan(Math.tan(vf)*cam.aspect),d=Math.max(14.5/Math.tan(hf),9/Math.tan(vf))*1.05;cam.position.set(0,d*.9,d*.44);ctl.target.set(0,0,.3)}
+new ResizeObserver(()=>{fit()}).observe($("view"));fit();overview();
+$("camOver").onclick=()=>{following=false;$("camOver").className="on";$("camFollow").className="";overview()};
+$("camFollow").onclick=()=>{following=true;$("camFollow").className="on";$("camOver").className=""};
+}catch(e){ok=false;console.error(e);const stub={visible:false,position:{set(){}},material:{color:{set(){}}}};spec=stub;glassM=stub;$("err3d").style.display="block"}
+// ---------- simulation
+const S={st:"INIT",t:0,clock:0,saved:null,fault:false,job:false,jobT:0,batt:100,cx:3,cz:11,cur:[3,11],h:-Math.PI/2,kfree:0,exploring:false,legSteps:0,legFrom:[3,11],runSteps:0,runOpt:0,runsLog:[],dirty:true,path:[],moving:false,mode:"move",ph:0,pt:0,wait:0,waitLog:false,retry:0,hold:false,ward:3,carry:false,runs:0,rer:0,waits:0,recs:0,act:""};
+const log=(m)=>{const d=document.createElement("div"),s=S.clock|0;d.innerHTML="<b>"+String(s/60|0).padStart(2,"0")+":"+String(s%60).padStart(2,"0")+"</b>  "+m;$("log").prepend(d);while($("log").children.length>40)$("log").lastChild.remove()};
+function go(k,msg,keep){take(S.st,k);S.st=k;S.t=0;S.wait=0;S.waitLog=false;S.retry=0;if(k.startsWith("NAV_")){S.path=[];S.moving=false;S.ph=0;S.exploring=false;if(!keep){S.legSteps=0;S.legFrom=[S.cur[0],S.cur[1]]}}if(msg)log(msg);$("nowName").textContent=ST[k][0];$("nowDetail").textContent=ST[k][1];$("now").style.borderLeftColor="var(--"+({main:"main",nav:"nav",err:"err"}[ST[k][2]])+")"}
+const nav=()=>S.st.startsWith("NAV_");
+const near=(c,r)=>people.some(p=>Math.hypot(p.x-c[0],p.y-c[1])<r);
+function danger(){const b=new Set();for(const p of people)for(let d=-1;d<=2;d++){const x=Math.round(p.x)+d*p.d;if(x>=0&&x<COLS)b.add(p.y*COLS+x)}b.delete(S.cur[1]*COLS+S.cur[0]);return b}
+function newSpec(){S.carry=false;spec.visible=true;spec.material.color.set(WARDS[S.ward].hex);const[x,z]=W(...WARDS[S.ward].table);spec.position.set(x,.5,z)}
+function fail(){return S.fault?"sensor fault":S.batt<15?"low battery":(S.job&&S.jobT>150)?"job timeout":null}
+function interrupt(why){if(ACTIVE.includes(S.st))S.saved=S.st;S.recs++;go("RECOVERY","Recovery hold ("+why+"). "+(S.saved?"Saved "+ST[S.saved][0].toLowerCase()+" progress.":""))}
+function legDone(key,tg){const L=LS[key],st=S.legSteps,opt=(astar(S.legFrom,tg,new Set(),true)||[]).length;if(L.first===null)L.first=st;L.best=L.best===null?st:Math.min(L.best,st);L.last=st;L.opt=opt;S.runSteps+=st;S.runOpt+=opt;log("Leg done in "+st+" steps (shortest possible: "+opt+").");if(key==="base"){S.runsLog.push({n:S.runs,ward:S.ward,steps:S.runSteps,opt:S.runOpt});log("Run "+S.runs+" total: "+S.runSteps+" steps vs "+S.runOpt+" shortest possible.")}S.dirty=true}
+function arrive(k){const key=k==="NAV_PICKUP"?"w"+S.ward:k==="NAV_DELIVERY"?"lab":"base";legDone(key,k==="NAV_PICKUP"?WARDS[S.ward].pad:TGT[k]);go(k==="NAV_PICKUP"?"RECEIVE":k==="NAV_DELIVERY"?"VERIFY":"STANDBY",k==="NAV_STANDBY"?"Base reached. Available at standby.":k==="NAV_PICKUP"?"Pickup reached.":"Delivery reached.")}
+function plan(tg,blk){if(known.has(tg[1]*COLS+tg[0])){const p=astar(S.cur,tg,blk,false);if(p)return[p,false]}return[explore(S.cur,blk)||[],true]}
+function navTick(sd){const k=S.st,tg=k==="NAV_PICKUP"?WARDS[S.ward].pad:TGT[k],tk=tg[1]*COLS+tg[0];
+ S.pt+=sd;if(S.pt>.28){S.pt=0;const p=S.ph;S.ph=(S.ph+1)%4;const ids=["observe","orient","decide",S.mode==="wait"?"act_wait":"act_move"];take(p===3?(S.mode==="wait"?"act_wait":"act_move"):ids[p],ids[S.ph],500)}
+ if(!S.moving){
+  if(S.cur[0]===tg[0]&&S.cur[1]===tg[1]){arrive(k);return}
+  if(!S.path.length||(S.exploring&&known.has(tk))){const was=S.exploring,[p,ex]=plan(tg,new Set());S.path=p;S.exploring=ex;if(ex&&!was)log("Target is not on my map yet: exploring the nearest unknown area.")}
+  if(!S.path.length){S.mode="wait";return}
+  if(S.path.slice(0,2).some(c=>near(c,1.15))){const[np,ex]=plan(tg,danger());
+   if(np.length&&np.length<=S.path.length+14&&!near(np[0],1.15)){if(S.mode!=="reroute")S.rer++,log("Person ahead. Safe path found: rerouting.");S.path=np;S.exploring=ex;S.mode="reroute";S.moving=true}
+   else{if(S.mode!=="wait")S.waits++,log("No safe path. Stopping and waiting.");S.mode="wait"}}
+  else{S.mode="move";S.moving=true}
+ }
+ if(S.moving){const n=S.path[0];if(near([S.cx,S.cz],.8)&&near(n,1.4)){S.mode="wait";return}
+  const dx=n[0]-S.cx,dz=n[1]-S.cz,d=Math.hypot(dx,dz),st=Math.min(d,2.4*sd);
+  if(d>1e-3){let a=Math.atan2(dz,dx)-S.h;a=Math.atan2(Math.sin(a),Math.cos(a));S.h+=a*Math.min(1,sd*10);S.cx+=dx/d*st;S.cz+=dz/d*st}
+  if(d<1e-3||st>=d){S.cx=n[0];S.cz=n[1];S.cur=n;S.path.shift();S.moving=false;S.legSteps++;reveal(S.cur)}}
+ if(S.mode==="wait"){S.wait+=sd;if(S.wait>8&&!S.waitLog){S.waitLog=true;log("Wait limit exceeded: seeking staff assistance.")}}else{S.wait=0;S.waitLog=false}
+}
+function update(sd){S.clock+=sd;S.t+=sd;if(S.job)S.jobT+=sd;const hold=S.hold,auto=$("auto").checked;
+ for(const p of people){p.x+=p.d*.75*sd;if(p.x>25.5)p.d=-1;if(p.x<1.5)p.d=1}
+ if(ACTIVE.includes(S.st)){const w=fail();if(w)interrupt(w)}
+ const s=S.st;
+ if(s==="INIT"&&S.t>1.5){log("Checks passed. Ready at base. Map knowledge: base only.");go("STANDBY")}
+ else if(s==="STANDBY"&&auto&&S.t>3)request();
+ else if(s==="VALIDATE"&&S.t>1.4&&!hold){S.job=true;S.jobT=0;S.runSteps=0;S.runOpt=0;newSpec();go("NAV_PICKUP","Request valid. Heading to "+WARDS[S.ward].name+" for pickup.")}
+ else if(s==="RECEIVE"&&S.t>2&&!hold){S.carry=true;glassM.material.color.set(0xaee3ff);go("NAV_DELIVERY","Specimen secured and locked; job verified.")}
+ else if(s==="VERIFY"&&S.t>2.2&&!hold){S.carry=false;const[x,z]=W(22,2);spec.position.set(x,.5,z);go("RECORD","Receipt verified; specimen released.")}
+ else if(s==="RECORD"&&S.t>1.6){S.job=false;S.runs++;log("Receipt logged; requester notified.");go("NAV_STANDBY")}
+ else if(s==="REVALIDATE"&&S.t>1.6){const w=fail();if(w)go("RECOVERY","Checks fail ("+w+"): remain on hold.");else{const k=S.saved||"STANDBY";S.saved=null;take("REVALIDATE","*");go(k,"Checks pass. Resumed "+ST[k][0].toLowerCase()+"; navigation restarts at Observe.",true)}}
+ else if(s==="ESTOP"&&auto&&S.t>5)clearStop();
+ else if(s==="RECOVERY"&&auto&&S.t>5)resolve();
+ if((s==="VALIDATE"||s==="RECEIVE"||s==="VERIFY")&&hold&&S.t>3*(S.retry+1)){S.retry++;log(s==="VERIFY"?"Receipt pending: wait and retry ("+S.retry+").":"Check failed: holding for correction.")}
+ if(nav())navTick(sd);
+ if(ACTIVE.includes(S.st))S.batt=Math.max(0,S.batt-(nav()&&S.mode!=="wait"?.2:.03)*sd);
+}
+function request(w){if(S.st==="STANDBY"){const un=[1,2,3].filter(i=>FOUND["w"+i]===undefined);S.ward=w||(un.length?un[Math.floor(Math.random()*un.length)]:1+Math.floor(Math.random()*3));go("VALIDATE","New request: pickup from "+WARDS[S.ward].name+".")}}
+function clearStop(){if(S.st==="ESTOP")go("RECOVERY","Authorized clearance and reset.")}
+function resolve(){if(S.st==="RECOVERY"){S.fault=false;S.batt=100;S.jobT=0;go("REVALIDATE","Issue resolved (recharged / reset). Revalidating.")}}
+document.querySelectorAll(".wb").forEach(b=>b.onclick=()=>request(+b.dataset.w));$("bClr").onclick=clearStop;$("bRes").onclick=resolve;
+$("bEst").onclick=()=>{if(S.st==="INIT"||S.st==="ESTOP")return;if(ACTIVE.includes(S.st))S.saved=S.st;S.recs++;go("ESTOP","Emergency stop: motion inhibited, staff alerted.")};
+$("bFault").onclick=()=>{S.fault=true;log("Sensor fault injected.")};$("bLow").onclick=()=>{S.batt=12;log("Battery dropped to 12%.")};
+$("bTo").onclick=()=>{if(S.job){S.jobT=999;log("Job timeout injected.")}else log("No active job to time out.")};
+$("bHold").onclick=()=>{S.hold=!S.hold;$("bHold").textContent="Hold checks: "+(S.hold?"on":"off");$("bHold").className=S.hold?"on":"";log(S.hold?"Checks will fail at validate, receive and verify.":"Checks released.")};
+function initKnown(){known=new Set();S.kfree=0;for(let y=8;y<=14;y++)for(let x=0;x<=8;x++){known.add(y*COLS+x);if(!grid[y][x])S.kfree++}for(const k in FOUND)delete FOUND[k];for(const d of DEPTS)LS[d[0]]={first:null,best:null,last:null,opt:null};syncFog();checkFound();reveal(S.cur);S.dirty=true}
+const vv=x=>x===null?"-":x;
+function renderLearn(){$("explored").textContent=Math.round(100*S.kfree/FREE)+"%";$("rooms").textContent=DEPTS.filter(d=>FOUND[d[0]]!==undefined).length+" of "+DEPTS.length;
+ $("learnRows").innerHTML=DEPTS.map(([id,name,col])=>{const L=LS[id],f=FOUND[id],sw='<i style="background:'+col+'"></i>';
+  if(f===undefined)return'<tr><td>'+sw+name+'</td><td class="num unknown" colspan="5">not found yet</td></tr>';
+  const fs=id==="base"?"start":"#"+f;
+  if(id==="store")return'<tr><td>'+sw+name+'</td><td class="num">'+fs+'</td><td class="num unknown" colspan="4">no pickup or delivery here</td></tr>';
+  const w=L.last===null?"-":(L.last-L.opt<=0?"optimal":"+"+(L.last-L.opt));
+  return'<tr><td>'+sw+name+'</td><td class="num">'+fs+'</td><td class="num">'+vv(L.first)+'</td><td class="num best">'+vv(L.best)+'</td><td class="num">'+vv(L.last)+'</td><td class="num">'+w+'</td></tr>'}).join("");
+ const R=S.runsLog.slice(-16),el=$("chart");$("lastRun").textContent=R.length?R[R.length-1].steps+" vs "+R[R.length-1].opt:"-";
+ if(!R.length){el.innerHTML='<text x="320" y="85" text-anchor="middle" fill="var(--muted)" font-size="14">Complete a run to see the chart.</text>';return}
+ const mx=Math.max(20,...R.map(r=>Math.max(r.steps,r.opt)))*1.12,band=594/16,top=14,bot=140,H=bot-top;
+ let c='<line x1="36" y1="'+bot+'" x2="634" y2="'+bot+'" stroke="var(--line)"/><text x="30" y="'+(top+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">'+Math.round(mx)+'</text><text x="30" y="'+(bot+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">0</text>';
+ R.forEach((r,i)=>{const x=40+i*band,h=r.steps/mx*H,oy=bot-r.opt/mx*H;c+='<rect x="'+x+'" y="'+(bot-h)+'" width="24" height="'+h+'" rx="3" fill="'+WARDS[r.ward].css+'"/><line x1="'+(x-4)+'" x2="'+(x+28)+'" y1="'+oy+'" y2="'+oy+'" stroke="var(--ink)" stroke-width="2.5"/><text x="'+(x+12)+'" y="'+(bot-h-4)+'" text-anchor="middle" font-size="11" fill="var(--ink)">'+r.steps+'</text><text x="'+(x+12)+'" y="'+(bot+16)+'" text-anchor="middle" font-size="11" fill="var(--muted)">#'+r.n+'</text>'});
+ c+='<text x="36" y="168" font-size="11.5" fill="var(--muted)">Bar color = pickup ward. Black tick = shortest possible for that run on the true map.</text>';el.innerHTML=c}
+$("bForget").onclick=()=>{Object.assign(S,{cx:3,cz:11,cur:[3,11],h:-Math.PI/2,path:[],moving:false,carry:false,job:false,saved:null,fault:false,batt:100,runs:0,rer:0,waits:0,recs:0,runsLog:[],mode:"move",exploring:false,legSteps:0,legFrom:[3,11]});if(spec)spec.visible=false;initKnown();go("STANDBY","Map forgotten. Robot reset at base and knows only the base again.")};
+let playing=true;$("btnPlay").onclick=()=>{playing=!playing;$("btnPlay").textContent=playing?"Pause":"Play"};
+function thought(){const s=S.st,h=S.hold;const ph=["Observing: scanning for people and free space.",S.exploring?"Orienting: my target is not on the map yet. Finding unexplored space.":"Orienting: matching sensors to my map.",S.mode==="wait"?"Deciding: no safe path.":"Deciding: the path is safe.",S.mode==="wait"?"Acting: stopping and waiting, still sensing.":S.mode==="reroute"?"Acting: rerouting around a person.":S.exploring?"Acting: exploring to learn the map.":"Acting: moving along my route."];
+ const m={INIT:"Checking my sensors, battery and compartment.",STANDBY:"At base. Ready for a request.",VALIDATE:h?"This request looks wrong. Holding for correction.":"Checking pickup, delivery and job data.",RECEIVE:h?"ID check failed. Holding.":"Verifying ID, then locking the compartment.",VERIFY:h?"Receipt not verified yet. Waiting, will retry.":"Authorizing staff and verifying receipt.",RECORD:"Logging receipt and notifying the requester.",ESTOP:"Emergency stop! Waiting for authorized clearance.",RECOVERY:"On hold. Specimen secured; trip progress saved.",REVALIDATE:"Revalidating sensors, battery, location and load."};
+ return nav()?ph[S.ph]:m[s]}
+let lastKey="";const nodeIds=N.map(n=>n[0]).concat("decide");
+function frame(now){requestAnimationFrame(frame);if(S.dirty){S.dirty=false;renderLearn()}const dt=Math.min(.05,(now-(frame.l||now))/1000);frame.l=now;if(playing)update(dt*+$("speed").value);
+ const a=new Set([S.st]);if(nav()){a.add("observe");a.delete("observe");a.add(["observe","orient","decide",S.mode==="wait"?"act_wait":"act_move"][S.ph])}
+ const key=[...a].join();if(key!==lastKey){lastKey=key;for(const id of nodeIds){const el=$("n_"+id);el&&el.classList.toggle("active",a.has(id))}}
+ E.forEach((e,i)=>{const el=$("e"+i),on=(eFlash[i]||0)>now;if(el.classList.contains("taken")!==on){el.classList.toggle("taken",on);el.firstChild.setAttribute("marker-end",on?"url(#aht)":"url(#ah)")}});
+ const m=$("mind"),t=thought();if($("mindTxt").textContent!==t)$("mindTxt").textContent=t;m.className="mind"+(ST[S.st][2]==="err"?" alert":(S.st==="STANDBY"||S.st==="RECORD")?" happy":"");
+ $("batFill").style.width=S.batt+"%";$("batFill").style.background=S.batt<20?"#cc3d36":"#258a4f";$("batTxt").textContent=Math.round(S.batt)+"%";
+ document.querySelectorAll(".wb").forEach(b=>b.disabled=S.st!=="STANDBY");$("bClr").disabled=S.st!=="ESTOP";$("bRes").disabled=S.st!=="RECOVERY";
+ $("nRuns").textContent=S.runs;$("nRer").textContent=S.rer;$("nWait").textContent=S.waits;$("nRec").textContent=S.recs;
+ if(!ok)return;
+ const[bx,bz]=W(S.cx,S.cz);bot.position.set(bx,0,bz);bot.rotation.y=-S.h;
+ const g=ST[S.st][2];ring.material.color.set(g==="err"?0xb83a46:nav()?(S.mode==="wait"?0xc99a2e:0x1f7a5c):0x3b78b8);tip.material.color.set(g==="err"?0xb83a46:0x0b7480);
+ if(S.carry){spec.visible=true;spec.position.set(bx,.69,bz)}
+ people.forEach((p,i)=>{const[x,z]=W(p.x,p.y);perMesh[i].position.set(x,0,z);perMesh[i].visible=known.has(Math.round(p.y)*COLS+Math.round(p.x))});staffM.forEach(([c,m])=>m.visible=known.has(c[1]*COLS+c[0]));
+ if(following){const v=new T.Vector3(bx,0,bz),o=cam.position.clone().sub(ctl.target);ctl.target.lerp(v,Math.min(1,dt*3));cam.position.copy(ctl.target).add(o.setLength(Math.min(o.length(),14)))}
+ ctl.update();ren.render(scene,cam)}
+initKnown();go("INIT","Initializing.");requestAnimationFrame(frame);
+})();
+</script></body></html>
